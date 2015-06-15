@@ -302,11 +302,6 @@ module Rack
         return dump_exceptions exceptions
       end
 
-      if query_string =~ /pp=env/
-        body.close if body.respond_to? :close
-        return dump_env env
-      end
-
       if query_string =~ /pp=help/
         body.close if body.respond_to? :close
         return help(client_settings)
@@ -427,28 +422,6 @@ module Rack
       [200, headers, [body]]
     end
 
-    def dump_env(env)
-      body = "Rack Environment\n---------------\n"
-      env.each do |k,v|
-        body << "#{k}: #{v}\n"
-      end
-
-      body << "\n\nEnvironment\n---------------\n"
-      ENV.each do |k,v|
-        body << "#{k}: #{v}\n"
-      end
-
-      body << "\n\nRuby Version\n---------------\n"
-      body << "#{RUBY_VERSION} p#{RUBY_PATCHLEVEL}\n"
-
-      body << "\n\nInternals\n---------------\n"
-      body << "Storage Provider #{config.storage_instance}\n"
-      body << "User #{user(env)}\n"
-      body << config.storage_instance.diagnostics(user(env)) rescue "no diagnostics implemented for storage"
-
-      text_result(body)
-    end
-
     def text_result(body)
       headers = {'Content-Type' => 'text/plain'}
       [200, headers, [body]]
@@ -459,7 +432,6 @@ module Rack
       body = "Append the following to your query string:
 
   pp=help : display this screen
-  pp=env : display the rack environment
   pp=skip : skip mini profiler for this request
   pp=no-backtrace #{"(*) " if client_settings.backtrace_none?}: don't collect stack traces from all the SQL executed (sticky, use pp=normal-backtrace to enable)
   pp=normal-backtrace #{"(*) " if client_settings.backtrace_default?}: collect stack traces from all the SQL executed and filter normally
